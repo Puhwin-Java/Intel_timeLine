@@ -26,12 +26,57 @@
   <main>
     <section class="hero">
       <div class="container">
-        <h1>Intel — a timeline of ECO</h1>
-        <p class="subtitle">From 1968 to today — Sustainability Through the Years at Intel.</p>
-        <p>
-          <a class="btn" href="#timeline">View timeline</a>
-          <a class="btn btn-alt" href="#about">Learn more</a>
-        </p>
+        <div class="inner">
+          <div>
+            <h1>Intel — a timeline of ECO</h1>
+            <p class="subtitle">From 1968 to today — Sustainability Through the Years at Intel.</p>
+            <p>
+              <a class="btn" href="#timeline">View timeline</a>
+              <a class="btn btn-alt" href="#about">Learn more</a>
+            </p>
+          </div>
+          <div>
+            <p class="eyebrow">Monthly Intel Newspaper</p>
+            <h2 id="signup-title">Sign up for the Intel monthly newspaper</h2>
+            <p class="subtitle">Get one email a month with Intel milestones, sustainability news, and timeline highlights.</p>
+            <form class="signup-form" aria-describedby="signup-note">
+              <fieldset>
+                <legend class="visually-hidden">Monthly newspaper sign up</legend>
+                <div class="form-field">
+                  <label class="visually-hidden" for="signup-first-name">First name</label>
+                  <input
+                    type="text"
+                    id="signup-first-name"
+                    name="firstName"
+                    autocomplete="given-name"
+                    inputmode="text"
+                    placeholder="First name"
+                    autofocus
+                    required
+                    aria-describedby="first-name-hint"
+                  >
+                  <p id="first-name-hint" class="field-hint">Used to personalize your greeting. Required.</p>
+                </div>
+                <div class="form-field">
+                  <label class="visually-hidden" for="signup-email">Email address</label>
+                  <input
+                    type="email"
+                    id="signup-email"
+                    name="email"
+                    autocomplete="email"
+                    inputmode="email"
+                    placeholder="Email address"
+                    required
+                    aria-describedby="email-hint"
+                  >
+                  <p id="email-hint" class="field-hint">We send one email each month. Required.</p>
+                </div>
+              </fieldset>
+              <button class="btn" type="submit">Sign me up</button>
+              <p id="signup-note" class="form-note">We never sell your email. Unsubscribe anytime.</p>
+            </form>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -39,8 +84,8 @@
       <div class="timeline-header">
         <h2>Intel Timeline</h2>
         <div class="timeline-controls">
-          <button class="timeline-nav prev" aria-label="Previous milestone">◀</button>
-          <button class="timeline-nav next" aria-label="Next milestone">▶</button>
+          <button class="timeline-nav prev" type="button" aria-label="Previous milestone">◀</button>
+          <button class="timeline-nav next" type="button" aria-label="Next milestone">▶</button>
         </div>
       </div>
 
@@ -144,24 +189,6 @@
       <p>Since its founding in 1968, Intel has grown from managing basic environmental and safety concerns to becoming a global sustainability leader. Over the decades, the company has focused on energy efficiency, renewable energy, water conservation and restoration, waste reduction, and reducing emissions. Today, Intel pursues ambitious goals like net-zero carbon emissions, net positive water use, and sustainable supply chain practices.</p>
     </section>
 
-    <section id="subscribe" class="subscribe container">
-      <div class="subscribe-content">
-        <div>
-          <h2>Subscribe for updates</h2>
-          <p>Get occasional timeline updates, sustainability highlights, and new milestones as they are added.</p>
-        </div>
-        <form class="subscribe-form" aria-label="Subscription form">
-          <label for="subscribe-email">Email address</label>
-          <div class="subscribe-row">
-            <input type="email" id="subscribe-email" name="email" placeholder="you@example.com" autocomplete="email" required>
-            <button class="btn" type="submit">Subscribe</button>
-          </div>
-          <p class="form-note">Monthly at most. Unsubscribe anytime.</p>
-        </form>
-      </div>
-    </section>
-
-    
   </main>
 
   <footer class="site-footer">
@@ -216,7 +243,8 @@
         const htmlLang = (root.getAttribute('lang') || '').trim();
         if (htmlLang) return htmlLang;
         const bodyLang = (document.body.getAttribute('lang') || '').trim();
-        return bodyLang;
+        if (bodyLang) return bodyLang;
+        return (navigator.language || '').trim();
       }
 
       function getDir(){
@@ -232,6 +260,21 @@
         const dir = getDir().toLowerCase();
         const shouldRtl = dir === 'rtl' || rtlLangs.has(lang);
         root.setAttribute('dir', shouldRtl ? 'rtl' : 'ltr');
+        document.body.setAttribute('dir', shouldRtl ? 'rtl' : 'ltr');
+        applyLangToInputs(langRaw);
+      }
+
+      function applyLangToInputs(langRaw){
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach((el) => {
+          if (langRaw) {
+            el.setAttribute('lang', langRaw);
+          } else {
+            el.removeAttribute('lang');
+          }
+          el.setAttribute('dir', 'auto');
+          el.setAttribute('translate', 'yes');
+        });
       }
 
       function checkAndUpdate(){
@@ -240,8 +283,8 @@
         if (langNow !== lastLang || dirNow !== lastDir) {
           lastLang = langNow;
           lastDir = dirNow;
-          applyRtl();
         }
+        applyRtl();
       }
 
       // Initial run and watch for dynamic changes (e.g., Google Translate).
@@ -262,10 +305,23 @@
       if (!track) return;
 
       const cardSelector = '.timeline-card';
+      function isVerticalLayout(){
+        return window.matchMedia('(max-width: 900px)').matches;
+      }
+
       function scrollByCard(dir = 1){
         const card = track.querySelector(cardSelector);
-        const gap = parseInt(getComputedStyle(track).gap) || 16;
-        const width = card ? (card.offsetWidth + gap) : Math.round(track.clientWidth * 0.8);
+        const styles = getComputedStyle(track);
+        const gapX = parseInt(styles.columnGap || styles.gap) || 16;
+        const gapY = parseInt(styles.rowGap || styles.gap) || 16;
+
+        if (isVerticalLayout()) {
+          const height = card ? (card.offsetHeight + gapY) : Math.round(track.clientHeight * 0.8);
+          track.scrollBy({top: dir * height, behavior: 'smooth'});
+          return;
+        }
+
+        const width = card ? (card.offsetWidth + gapX) : Math.round(track.clientWidth * 0.8);
         track.scrollBy({left: dir * width, behavior: 'smooth'});
       }
 
@@ -274,22 +330,35 @@
 
       // Keyboard support
       track.addEventListener('keydown', (e) => {
+        if (isVerticalLayout()) {
+          if (e.key === 'ArrowDown') { e.preventDefault(); scrollByCard(1); }
+          if (e.key === 'ArrowUp') { e.preventDefault(); scrollByCard(-1); }
+          return;
+        }
         if (e.key === 'ArrowRight') { e.preventDefault(); scrollByCard(1); }
         if (e.key === 'ArrowLeft') { e.preventDefault(); scrollByCard(-1); }
       });
 
       // Drag to scroll
-      let isDown = false, startX, scrollLeft;
+      let isDown = false, startX, startY, scrollLeft, scrollTop;
       track.addEventListener('pointerdown', (e) => {
         isDown = true;
         track.setPointerCapture(e.pointerId);
         track.classList.add('dragging');
         startX = e.clientX;
+        startY = e.clientY;
         scrollLeft = track.scrollLeft;
+        scrollTop = track.scrollTop;
       });
 
       track.addEventListener('pointermove', (e) => {
         if (!isDown) return;
+        if (isVerticalLayout()) {
+          const y = e.clientY;
+          const walkY = (startY - y);
+          track.scrollTop = scrollTop + walkY;
+          return;
+        }
         const x = e.clientX;
         const walk = (startX - x);
         track.scrollLeft = scrollLeft + walk;
