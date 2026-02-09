@@ -377,6 +377,60 @@ p{color:var(--muted);margin-bottom:0.75rem}
   background: rgba(56,189,248,0.06);
 }
 
+.btn-sm{
+  padding:0.50rem 0.75rem;
+  font-size:0.85rem;
+}
+
+/* ===========================
+   FEATURES SECTION
+=========================== */
+.features{
+  margin-top: 3rem;
+  padding: 2rem 1rem;
+}
+
+.features .row > div{
+  display: flex;
+  flex-direction: column;
+}
+
+.features h3{
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.features p{
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+}
+
+/* ===========================
+   HERO FEATURE CARDS
+=========================== */
+.hero .row > div{
+  display: flex;
+  flex-direction: column;
+}
+
+.hero .row h3{
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.hero .row p{
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+}
+
 /* ===========================
    FEATURES GRID
 =========================== */
@@ -738,5 +792,6 @@ p{color:var(--muted);margin-bottom:0.75rem}
   .contact-form .row{grid-template-columns:1fr 1fr}
 }
 
-/* Prevent body scroll when mobile menu open */
-body.menu-open{overflow:hidden}
+/* Prevent menu from blocking clicks when closed */
+.nav.mobile{pointer-events:none}
+.nav.mobile.open{pointer-events:auto}

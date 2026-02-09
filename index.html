@@ -189,6 +189,26 @@
       <p>Since its founding in 1968, Intel has grown from managing basic environmental and safety concerns to becoming a global sustainability leader. Over the decades, the company has focused on energy efficiency, renewable energy, water conservation and restoration, waste reduction, and reducing emissions. Today, Intel pursues ambitious goals like net-zero carbon emissions, net positive water use, and sustainable supply chain practices.</p>
     </section>
 
+    <section class="features container">
+      <div class="row g-4">
+        <div class="col-12 col-md-4">
+          <h3>⚡ Energy Efficiency</h3>
+          <p>Leading the industry in creating processors that deliver maximum performance with minimal power consumption, reducing environmental impact.</p>
+          <a class="btn btn-sm" href="#timeline">Learn More</a>
+        </div>
+        <div class="col-12 col-md-4">
+          <h3>🌱 Renewable Energy</h3>
+          <p>Committed to powering Intel operations with clean, renewable energy sources worldwide, advancing our net-zero emissions goals.</p>
+          <a class="btn btn-sm" href="#timeline">Learn More</a>
+        </div>
+        <div class="col-12 col-md-4">
+          <h3>💧 Water & Waste</h3>
+          <p>Implementing innovative conservation programs and recycling initiatives to achieve net positive water use and zero waste objectives.</p>
+          <a class="btn btn-sm" href="#timeline">Learn More</a>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="site-footer">
@@ -209,7 +229,6 @@
       nav.classList.add('mobile'); // ensures mobile styles apply
       const isOpen = nav.classList.toggle('open');
       toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      document.body.classList.toggle('menu-open', isOpen);
     });
 
     // Close menu when resizing to desktop
@@ -217,7 +236,6 @@
       if (window.innerWidth > 700) {
         nav.classList.remove('open', 'mobile');
         toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('menu-open');
       }
     });
 
@@ -228,73 +246,85 @@
       if (!nav.contains(e.target) && !toggle.contains(e.target)) {
         nav.classList.remove('open');
         toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('menu-open');
       }
     });
 
-    // Detect translated language changes and toggle RTL layout when needed.
-    (function(){
+    // Close menu on link click and Escape key
+    nav.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        nav.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        nav.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Detect translated language changes and toggle RTL layout when needed. (optimized)
+    (function () {
       const rtlLangs = new Set(['ar','he','fa','ur','dv','ps','syr','ug','yi','ku']);
       const root = document.documentElement;
+
       let lastLang = '';
       let lastDir = '';
+      let rafId = 0;
 
-      function getLang(){
-        const htmlLang = (root.getAttribute('lang') || '').trim();
-        if (htmlLang) return htmlLang;
-        const bodyLang = (document.body.getAttribute('lang') || '').trim();
-        if (bodyLang) return bodyLang;
-        return (navigator.language || '').trim();
+      function getLang() {
+        return (root.getAttribute('lang') || document.body?.getAttribute('lang') || navigator.language || '').trim();
       }
 
-      function getDir(){
-        const htmlDir = (root.getAttribute('dir') || '').trim();
-        if (htmlDir) return htmlDir;
-        const bodyDir = (document.body.getAttribute('dir') || '').trim();
-        return bodyDir;
+      function getDir() {
+        return (root.getAttribute('dir') || document.body?.getAttribute('dir') || '').trim();
       }
 
-      function applyRtl(){
-        const langRaw = getLang();
-        const lang = langRaw.split('-')[0].toLowerCase();
-        const dir = getDir().toLowerCase();
-        const shouldRtl = dir === 'rtl' || rtlLangs.has(lang);
-        root.setAttribute('dir', shouldRtl ? 'rtl' : 'ltr');
-        document.body.setAttribute('dir', shouldRtl ? 'rtl' : 'ltr');
-        applyLangToInputs(langRaw);
-      }
-
-      function applyLangToInputs(langRaw){
+      function applyLangToInputs(langRaw) {
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach((el) => {
-          if (langRaw) {
-            el.setAttribute('lang', langRaw);
-          } else {
-            el.removeAttribute('lang');
-          }
-          el.setAttribute('dir', 'auto');
-          el.setAttribute('translate', 'yes');
+          if (langRaw) el.setAttribute('lang', langRaw);
+          else el.removeAttribute('lang');
+
+          if (el.getAttribute('dir') !== 'auto') el.setAttribute('dir', 'auto');
+          if (el.getAttribute('translate') !== 'yes') el.setAttribute('translate', 'yes');
         });
       }
 
-      function checkAndUpdate(){
-        const langNow = getLang();
-        const dirNow = getDir();
-        if (langNow !== lastLang || dirNow !== lastDir) {
-          lastLang = langNow;
-          lastDir = dirNow;
+      function update() {
+        const langRaw = getLang();
+        const lang = (langRaw.split('-')[0] || '').toLowerCase();
+        const dirAttr = getDir().toLowerCase();
+
+        const shouldRtl = dirAttr === 'rtl' || rtlLangs.has(lang);
+        const desiredDir = shouldRtl ? 'rtl' : 'ltr';
+
+        if (root.getAttribute('dir') !== desiredDir) root.setAttribute('dir', desiredDir);
+        if (document.body && document.body.getAttribute('dir') !== desiredDir) {
+          document.body.setAttribute('dir', desiredDir);
         }
-        applyRtl();
+
+        if (langRaw !== lastLang) applyLangToInputs(langRaw);
+
+        lastLang = langRaw;
+        lastDir = desiredDir;
       }
 
-      // Initial run and watch for dynamic changes (e.g., Google Translate).
-      checkAndUpdate();
-      const observer = new MutationObserver(checkAndUpdate);
-      observer.observe(root, { attributes: true, attributeFilter: ['lang','dir'] });
-      if (document.body) {
-        observer.observe(document.body, { attributes: true, attributeFilter: ['lang','dir'] });
+      function scheduleUpdate() {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(update);
       }
-      setInterval(checkAndUpdate, 1500);
+
+      update();
+
+      const observer = new MutationObserver(scheduleUpdate);
+      observer.observe(root, { attributes: true, attributeFilter: ['lang', 'dir'] });
+      if (document.body) observer.observe(document.body, { attributes: true, attributeFilter: ['lang', 'dir'] });
+
+      window.addEventListener('languagechange', scheduleUpdate);
+
+      // Optional fallback: setInterval(scheduleUpdate, 5000);
     })();
 
     // Timeline scroll + controls
